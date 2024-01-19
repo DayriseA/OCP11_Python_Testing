@@ -86,7 +86,9 @@ def test_purchase_more_than_12_places(client, competitions_list, clubs_list):
     places = 13
     data = {"competition": competition, "club": club, "places": places}
     response = client.post("/purchasePlaces", data=data)
-    assert response.status_code == 400
+    assert response.status_code == 200
+    assert b"book more than 12 places" in response.data
+    assert b"How many places" in response.data
 
 
 def test_purchase_more_places_than_available(client, competitions_list, clubs_list):

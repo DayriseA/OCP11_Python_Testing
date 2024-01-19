@@ -55,6 +55,9 @@ def book(competition, club):
 
 @app.route("/purchasePlaces", methods=["POST"])
 def purchasePlaces():
+    """
+    Purchase places in a competition for a club. A club can't buy more than 12 places.
+    """
     competition = [c for c in competitions if c["name"] == request.form["competition"]][
         0
     ]
@@ -68,6 +71,11 @@ def purchasePlaces():
         )
         flash(msg)
         return render_template("booking.html", club=club, competition=competition)
+
+    elif placesRequired > 12:
+        flash("Sorry, you can't book more than 12 places.")
+        return render_template("booking.html", club=club, competition=competition)
+
     else:
         competition["numberOfPlaces"] = (
             int(competition["numberOfPlaces"]) - placesRequired
