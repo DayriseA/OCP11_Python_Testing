@@ -1,4 +1,5 @@
 import pytest
+import html
 from server import loadClubs, loadCompetitions
 
 REGISTERED_MAIL = "john@simplylift.co"
@@ -37,8 +38,15 @@ def test_showSummary_with_registered_email(client, registered_mail):
 
 
 def test_showSummary_with_unregistered_email(client):
-    response = client.post("/showSummary", data={"email": "unregistered@test.com"})
+    data = {"email": "unregistered@test.com"}
+    response = client.post("/showSummary", data=data)
     assert response.status_code == 302
+
+    # Also check that redirected to the right page
+    response = client.post("/showSummary", data=data, follow_redirects=True)
+    flash_message = html.escape("Sorry, that email wasn not found.")
+    assert response.status_code == 200
+    assert flash_message in response.data.decode()
 
 
 def test_get_method_not_allowed_on_showSummary(client):
