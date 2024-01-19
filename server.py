@@ -1,5 +1,6 @@
 import json
 from flask import Flask, render_template, request, redirect, flash, url_for, Response
+from datetime import datetime
 
 
 def loadClubs():
@@ -12,6 +13,18 @@ def loadCompetitions():
     with open("competitions.json") as comps:
         listOfCompetitions = json.load(comps)["competitions"]
         return listOfCompetitions
+
+
+def is_date_str_in_past(date_str):
+    """Check if date string is in the past. Returns True if so, False otherwise."""
+    date = None
+    try:
+        date = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        print("Invalid date string. Expected format: YYYY-MM-DD HH:MM:SS")
+        raise
+    if date is not None:
+        return date < datetime.now()
 
 
 app = Flask(__name__)
@@ -48,9 +61,15 @@ def book(competition, club):
             status=404,
         )
     if foundClub and foundCompetition:
-        return render_template(
-            "booking.html", club=foundClub, competition=foundCompetition
-        )
+        if is_date_str_in_past(foundCompetition["date"]):
+            flash("You can't book places for a past competition.")
+            return render_template(
+                "welcome.html", club=foundClub, competitions=competitions
+            )
+        else:
+            return render_template(
+                "booking.html", club=foundClub, competition=foundCompetition
+            )
 
 
 @app.route("/purchasePlaces", methods=["POST"])

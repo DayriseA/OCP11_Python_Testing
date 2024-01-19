@@ -1,6 +1,6 @@
 import pytest
 import html
-from server import loadClubs, loadCompetitions
+from server import loadClubs, loadCompetitions, is_date_str_in_past
 
 REGISTERED_MAIL = "john@simplylift.co"
 
@@ -22,6 +22,22 @@ def test_loadCompetitions():
     for competition in competitions:
         assert "name" in competition
         assert "numberOfPlaces" in competition
+
+
+@pytest.mark.parametrize(
+    "date_str, expected",
+    [
+        ("2023-03-27 10:00:00", True),
+        ("2043-03-27 10:00:00", False),
+        ("invalid date string", pytest.raises(ValueError)),
+    ],
+)
+def test_is_date_str_in_past(date_str, expected):
+    if isinstance(expected, bool):
+        assert is_date_str_in_past(date_str) == expected
+    else:
+        with expected:
+            is_date_str_in_past(date_str)
 
 
 def test_index_route(client):
@@ -72,6 +88,15 @@ def test_book_with_invalid_parameters(client):
     response = client.get("/book/invalid_competition/invalid_club")
     assert response.status_code == 404
     assert b"Something went wrong" in response.data
+    assert b"Welcome" in response.data
+
+
+def test_book_with_past_competition(client, competitions_list, clubs_list):
+    competition = competitions_list[2]["name"]
+    club = clubs_list[2]["name"]
+    response = client.get(f"/book/{competition}/{club}")
+    assert response.status_code == 200
+    assert b"past competition" in response.data
     assert b"Welcome" in response.data
 
 
