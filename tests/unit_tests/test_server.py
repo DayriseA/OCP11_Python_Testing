@@ -36,16 +36,9 @@ def test_showSummary_with_registered_email(client, registered_mail):
     assert b"Book Places" in response.data
 
 
-# This passes currently but we don't want it like this in a TDD approach
 def test_showSummary_with_unregistered_email(client):
-    with pytest.raises(IndexError):
-        client.post("/showSummary", data={"email": "unregistered@test.com"})
-
-
-# This is the TDD approach
-# def test_showSummary_with_unregistered_email(client):
-#     response = client.post("/showSummary", data={"email": "unregistered@test.com"})
-#     assert response.status_code == 403
+    response = client.post("/showSummary", data={"email": "unregistered@test.com"})
+    assert response.status_code == 302
 
 
 def test_get_method_not_allowed_on_showSummary(client):
