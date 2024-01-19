@@ -44,7 +44,7 @@ def test_showSummary_with_unregistered_email(client):
 
     # Also check that redirected to the right page
     response = client.post("/showSummary", data=data, follow_redirects=True)
-    flash_message = html.escape("Sorry, that email wasn not found.")
+    flash_message = html.escape("Sorry, that email was not found.")
     assert response.status_code == 200
     assert flash_message in response.data.decode()
 
@@ -69,16 +69,10 @@ def test_book_with_valid_parameters(client, competitions_list, clubs_list):
 
 
 def test_book_with_invalid_parameters(client):
-    with pytest.raises(IndexError):
-        client.get("/book/invalid_competition/invalid_club")
-
-
-# TDD approach / wanted behaviour
-# def test_book_with_invalid_parameters(client):
-#     response = client.get("/book/invalid_competition/invalid_club")
-#     assert response.status_code == 302
-#     assert b"Something went wrong" in response.data
-#     assert b"Welcome" in response.data
+    response = client.get("/book/invalid_competition/invalid_club")
+    assert response.status_code == 404
+    assert b"Something went wrong" in response.data
+    assert b"Welcome" in response.data
 
 
 def test_get_method_not_allowed_on_purchasePlaces(client):
@@ -111,7 +105,9 @@ def test_purchase_with_not_enough_points(client, competitions_list, clubs_list):
     places = int(clubs_list[0]["points"]) + 1
     data = {"competition": competition, "club": club, "places": places}
     response = client.post("/purchasePlaces", data=data)
-    assert response.status_code == 400
+    assert response.status_code == 200
+    assert b"Sorry, you don&#39;t have enough points" in response.data
+    assert b"How many places" in response.data
 
 
 def test_purchase_with_places_not_an_int(client, competitions_list, clubs_list):
@@ -121,6 +117,22 @@ def test_purchase_with_places_not_an_int(client, competitions_list, clubs_list):
     data = {"competition": competition, "club": club, "places": places}
     with pytest.raises(ValueError):
         client.post("/purchasePlaces", data=data)
+
+
+def test_purchasePlaces_everything_ok(client, competitions_list, clubs_list):
+    # define number of places and points for the test purpose
+    competitions_list[0]["numberOfPlaces"] = 20
+    clubs_list[0]["points"] = 10
+
+    competition = competitions_list[0]["name"]
+    club = clubs_list[0]["name"]
+    places = 6
+    data = {"competition": competition, "club": club, "places": places}
+    response = client.post("/purchasePlaces", data=data)
+    assert response.status_code == 200
+    assert clubs_list[0]["points"] == 4
+    assert competitions_list[0]["numberOfPlaces"] == 14
+    assert b"Great - booking complete!" in response.data
 
 
 def test_logout(client):
