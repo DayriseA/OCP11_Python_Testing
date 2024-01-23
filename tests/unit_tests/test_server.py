@@ -79,11 +79,6 @@ def test_book_with_valid_parameters(client, competitions_list, clubs_list):
     assert competition in response.data.decode()
 
 
-# def test_book_with_valid_parameters_but_user_not_logged_in(client):
-#     """If user not logged in, redirect to index"""
-#     pass
-
-
 def test_book_with_invalid_parameters(client):
     response = client.get("/book/invalid_competition/invalid_club")
     assert response.status_code == 404
@@ -176,3 +171,9 @@ def test_logout(client):
     response = client.get("/logout", follow_redirects=True)
     assert b"GUDLFT Registration" in response.data
     assert b"Please enter your secretary email to continue" in response.data
+
+
+def test_clubsPoints_display(client, clubs_list):
+    response = client.get("/clubsPoints")
+    assert response.status_code == 200
+    assert b"Public list of all clubs and their current points" in response.data
