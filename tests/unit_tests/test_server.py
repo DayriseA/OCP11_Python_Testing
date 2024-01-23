@@ -117,12 +117,16 @@ def test_purchase_more_than_12_places(client, competitions_list, clubs_list):
 
 
 def test_purchase_more_places_than_available(client, competitions_list, clubs_list):
+    # define number of places available and points for the test purpose
+    competitions_list[0]["numberOfPlaces"] = 8
+    clubs_list[0]["points"] = 15
     competition = competitions_list[0]["name"]
     club = clubs_list[0]["name"]
-    places = int(competitions_list[0]["numberOfPlaces"]) + 1
-    data = {"competition": competition, "club": club, "places": places}
+    data = {"competition": competition, "club": club, "places": 10}
     response = client.post("/purchasePlaces", data=data)
-    assert response.status_code == 400
+    assert response.status_code == 200
+    assert b"not enough places available" in response.data
+    assert b"How many places" in response.data
 
 
 def test_purchase_with_not_enough_points(client, competitions_list, clubs_list):
@@ -130,6 +134,8 @@ def test_purchase_with_not_enough_points(client, competitions_list, clubs_list):
     club = clubs_list[0]["name"]
     # we have a ratio of 1 point per place
     places = int(clubs_list[0]["points"]) + 1
+    # be sure that we have enough places available for the test
+    competitions_list[0]["numberOfPlaces"] = places + 1
     data = {"competition": competition, "club": club, "places": places}
     response = client.post("/purchasePlaces", data=data)
     assert response.status_code == 200
@@ -147,7 +153,7 @@ def test_purchase_with_places_not_an_int(client, competitions_list, clubs_list):
 
 
 def test_purchasePlaces_everything_ok(client, competitions_list, clubs_list):
-    # define number of places and points for the test purpose
+    # define number of places available and points for the test purpose
     competitions_list[0]["numberOfPlaces"] = 20
     clubs_list[0]["points"] = 10
 
