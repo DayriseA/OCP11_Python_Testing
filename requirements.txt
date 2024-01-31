@@ -4,3 +4,4 @@ pytest-flask
 selenium
 coverage
 pytest-cov
+locust
