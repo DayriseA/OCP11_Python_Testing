@@ -2,3 +2,5 @@ Flask
 pytest
 pytest-flask
 selenium
+coverage
+pytest-cov
